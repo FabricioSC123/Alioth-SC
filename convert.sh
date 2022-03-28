@@ -4,17 +4,16 @@ CURRENTDIR=$(dirname "$SCRIPTDIR")
 TOOLS=$CURRENTDIR/tools
 OUT=$CURRENTDIR/out
 ZIP=$CURRENTDIR/zip
+
 sudo apt update -y; sudo apt upgrade -y
 sudo apt install zip unzip python3 brotli simg2img liblzma-dev liblz4-tool
 sudo apt update --fix-missing
 set -e
 mkdir payload
 mkdir out
-wget -O payload.py https://raw.githubusercontent.com/vm03/payload_dumper/master/payload_dumper.py
-chmod 777 payload.py
 unzip -d payload $1 payload.bin 
 rm -rf $1
-python3 payload.py payload.bin --out payload
+python3 $TOOLS/payload.py payload.bin --out payload
 echo "unzip images"
 python3 $TOOLS/imgextractor.py payload/system.img $OUT/system
 system=du -sk $OUT/system | awk '{$1*=1024;$1=int($1*1.05);printf $1}'`
