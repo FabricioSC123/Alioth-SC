@@ -1,0 +1,32 @@
+name: Alioth-SC
+
+on:
+  workflow_dispatch:
+    inputs:
+      ALIOTH_URL:
+        description: 'link de la rom stock'
+        required: true
+        default: ''
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkeando 
+      uses: actions/checkout@main
+    
+     
+    - name: Clonando Repositorio
+      run: |
+        git clone https://github.com/FabriSC/Alioth-SC.git
+        
+    - name: Descargando Rom
+      run: |
+        cd Alioth-SC
+        echo "Descargando Rom"
+        aria2c -o rom.zip ${{ github.event.inputs.ALIOTH_URL }} 
+        
+   
+    - name: Creando Rom
+      run: |
+        cd Alioth-SC
+        sudo ./convert.sh rom.zip
