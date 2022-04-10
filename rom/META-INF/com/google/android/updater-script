@@ -94,6 +94,13 @@ ui_print("Patching system_ext image unconditionally...");
 block_image_update(map_partition("system_ext_a"), package_extract_file("system_ext.transfer.list"), "system_ext.new.dat.br", "system_ext.patch.dat") ||
   abort("E2001: Failed to update system_ext image.");
 
+
+# Credits
+ui_print("Credits:");
+ui_print("AliothSC Github");
+ui_print("By FabriSC");
+
+
 # --- End patching dynamic partitions ---
 
 run_program("/system/bin/bootctl", "set-active-boot-slot", "0");

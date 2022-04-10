@@ -4,41 +4,100 @@ CURRENTDIR=$(dirname "$SCRIPTDIR")
 TOOLS=$CURRENTDIR/tools
 OUT=$CURRENTDIR/out
 ZIP=$CURRENTDIR/zip
+UNZIP=$CURRENTDIR/unzip
+VERIFY=$CURRENTDIR/verify
 
 # update linux
 sudo apt update -y  >/dev/null; sudo apt upgrade -y  >/dev/null
-sudo apt install zip unzip python3 brotli curl simg2img liblzma-dev liblz4-tool python3-pip img2simg simg2img -y  >/dev/null
+sudo apt install zip unzip python3 brotli curl simg2img liblzma-dev liblz4-tool python3-pip img2simg simg2img python3-testresources -y  >/dev/null
 
 # Requerimientos
 pip3 --no-cache-dir install -r $TOOLS/requirements.txt  >/dev/null
 
 # comenzando proceso
 echo ". Comenzando proyecto"
-set -e
-mkdir payload
 mkdir out
+mkdir verify
+mkdir unzip
 mkdir zip
 cp -af rom/* zip; mkdir $ZIP/firmware-update
 echo ". Descomprimiendo Archivo"
-unzip -d payload $1 payload.bin  >/dev/null
-python3 $TOOLS/payload.py payload/payload.bin --out payload  >/dev/null
+
+if [[ -e $CURRENTDIR/*.zip ]]; then
+mv *.zip romsc.zip >/dev/null
+else
+mv *.tgz romsc.tgz >/dev/null
+fi
+
+if [[ -e $CURRENTDIR/romsc.zip ]]; then
+unzip -d $VERIFY $CURRENTDIR/romsc.zip  >/dev/null
+else
+tar xzvf romsc.tgz
+mv romsc/images/* $UNZIP
+python3 $TOOLS/lu.py $UNZIP/super.img $UNZIP >/dev/null
+mv $UNZIP/system_a.img $UNZIP/system.img >/dev/null
+mv $UNZIP/system_ext_a.img $UNZIP/system_ext.img >/dev/null
+mv $UNZIP/vendor_a.img $UNZIP/vendor.img  >/dev/null
+mv $UNZIP/odm_a.img $UNZIP/odm.img  >/dev/null
+mv $UNZIP/product_a.img $UNZIP/product.img  >/dev/null
+rm -rf $UNZIP/super.img
+fi
+
+if [[ -e $VERIFY/images/super.img ]]; then
+mv $VERIFY/images/* $UNZIP
+python3 $TOOLS/lu.py $UNZIP/super.img $UNZIP >/dev/null
+mv $UNZIP/system_a.img $UNZIP/system.img >/dev/null
+mv $UNZIP/system_ext_a.img $UNZIP/system_ext.img >/dev/null
+mv $UNZIP/vendor_a.img $UNZIP/vendor.img  >/dev/null
+mv $UNZIP/odm_a.img $UNZIP/odm.img  >/dev/null
+mv $UNZIP/product_a.img $UNZIP/product.img  >/dev/null
+rm -rf $UNZIP/super.img
+else
+mv $VERIFY/* $UNZIP
+fi
+
+if [[ -e $UNZIP/payload.bin ]]; then
+python3 $TOOLS/payload.py $UNZIP/payload.bin --out payload  >/dev/null
+fi
+
 echo ". unzip images"
-python3 $TOOLS/imgextractor.py payload/system.img $OUT/system  >/dev/null
+python3 $TOOLS/imgextractor.py $UNZIP/system.img $OUT/system  >/dev/null
 systemz=`du -sk $OUT/system/system | awk '{$1*=1024;$1=int($1*1.05);printf $1}'`
-python3 $TOOLS/imgextractor.py payload/vendor.img $OUT/vendor  >/dev/null
+python3 $TOOLS/imgextractor.py $UNZIP/vendor.img $OUT/vendor  >/dev/null
 vendorz=`du -sk $OUT/vendor/vendor | awk '{$1*=1024;$1=int($1*1.05);printf $1}'`
-python3 $TOOLS/imgextractor.py payload/system_ext.img $OUT/system_ext  >/dev/null
+python3 $TOOLS/imgextractor.py $UNZIP/system_ext.img $OUT/system_ext  >/dev/null
 system_extz=`du -sk $OUT/system_ext/system_ext | awk '{$1*=1024;$1=int($1*1.05);printf $1}'`
-python3 $TOOLS/imgextractor.py payload/product.img $OUT/product >/dev/null
+python3 $TOOLS/imgextractor.py $UNZIP/product.img $OUT/product >/dev/null
 productz=`du -sk $OUT/product/product | awk '{$1*=1024;$1=int($1*1.05);printf $1}'`
-python3 $TOOLS/imgextractor.py payload/odm.img $OUT/odm  >/dev/null
+python3 $TOOLS/imgextractor.py $UNZIP/odm.img $OUT/odm  >/dev/null
 odmz=`du -sk $OUT/odm | awk '{$1*=1024;$1=int($1*1.05);printf $1}'`
 echo ". Delete images"
-cd $CURRENTDIR/payload
+cd $UNZIP
 rm -rf  system.img vendor.img system_ext.img product.img odm.img payload.py requirements.txt update_payload payload.bin
 mv boot.img $ZIP
-mv * $ZIP/firmware-update
+mv abl.img $ZIP/firmware-update
+mv aop.img $ZIP/firmware-update
+mv bluetooth.img $ZIP/firmware-update
+mv cmnlib.img $ZIP/firmware-update
+mv cmnlib64.img $ZIP/firmware-update
+mv devcfg.img $ZIP/firmware-update
+mv dsp.img $ZIP/firmware-update
+mv dtbo.img $ZIP/firmware-update
+mv featenabler.img $ZIP/firmware-update
+mv hyp.img $ZIP/firmware-update
+mv imagefv.img $ZIP/firmware-update
+mv keymaster.img $ZIP/firmware-update
+mv modem.img $ZIP/firmware-update
+mv qupfw.img $ZIP/firmware-update
+mv tz.img $ZIP/firmware-update 
+mv uefisecapp.img $ZIP/firmware-update
+mv vbmeta.img $ZIP/firmware-update
+mv vbmeta_system.img $ZIP/firmware-update
+mv vendor_boot.img $ZIP/firmware-update
+mv xbl.img $ZIP/firmware-update
+mv xbl_config.img $ZIP/firmware-update
 cd $CURRENTDIR
+
 # Version
 MIUIVERSION=$(grep ro.miui.ui.version.code= $OUT/system/system/system/build.prop | sed "s/ro.miui.ui.version.code=//g"; )
 ROMANDROID=$(grep ro.build.version.release= $OUT/system/system/system/build.prop | sed "s/ro.build.version.release=//g"; )
@@ -101,11 +160,11 @@ brotli -j -v -q 6 vendor.new.dat
 brotli -j -v -q 6 product.new.dat
 brotli -j -v -q 6 odm.new.dat
 echo "Empaquetando"
-zip -ry MIUI$MIUIVERSION-Alioth-$ROMBUILD-A$ROMANDROID.zip *  >/dev/null
+zip -ry MIUI$MIUIVERSION-Alioth-$ROMBUILD-A$ROMANDROID-SC.zip *  >/dev/null
 mv *.zip $CURRENTDIR
 echo "listo"
 echo "Subiendo a Sourceforge....."
 cd $CURRENTDIR
 mv $TOOLS/uploadsf $CURRENTDIR
-sudo bash $CURRENTDIR/uploadsf MIUI$MIUIVERSION-Alioth-$ROMBUILD-A$ROMANDROID.zip
+sudo bash $CURRENTDIR/uploadsf MIUI$MIUIVERSION-Alioth-$ROMBUILD-A$ROMANDROID-SC.zip
  
