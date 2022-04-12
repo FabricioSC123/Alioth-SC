@@ -168,11 +168,12 @@ brotli -j -v -q 6 vendor.new.dat
 brotli -j -v -q 6 product.new.dat
 brotli -j -v -q 6 odm.new.dat
 echo "Empaquetando"
-zip -ry MIUI$MIUIVERSION-Alioth-$ROMBUILD-A$ROMANDROID-SC.zip *  >/dev/null
+DATE=$(date +%Y/%m/%d-%H:%M)
+zip -ry MIUI$MIUIVERSION-Alioth-$ROMBUILD-A$ROMANDROID-$DATE-SC.zip *  >/dev/null
 mv *.zip $CURRENTDIR
 echo "listo"
 echo "Subiendo a Sourceforge....."
 cd $CURRENTDIR
 mv $TOOLS/uploadsf $CURRENTDIR
-sudo bash $CURRENTDIR/uploadsf MIUI$MIUIVERSION-Alioth-$ROMBUILD-A$ROMANDROID-SC.zip
+sudo bash $CURRENTDIR/uploadsf *-SC.zip
  
