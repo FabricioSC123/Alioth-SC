@@ -23,7 +23,9 @@ mkdir zip
 cp -af rom/* zip; mkdir $ZIP/firmware-update
 echo ". Descomprimiendo Archivo"
 
-if [[ -e $CURRENTDIR/*.zip ]]; then
+verifyzip=`ls *.zip | rev | cut -c 1,2,3 | rev`
+
+if [[ "zip" = "$verifyzip" ]]; then
 mv *.zip romsc.zip >/dev/null
 else
 mv *.tgz romsc.tgz >/dev/null
@@ -96,12 +98,17 @@ mv vbmeta_system.img $ZIP/firmware-update
 mv vendor_boot.img $ZIP/firmware-update
 mv xbl.img $ZIP/firmware-update
 mv xbl_config.img $ZIP/firmware-update
+if [[ -e cust.img ]]; then
+mv cust.img $ZIP/firmware-update
+sed -i "s/#f2//g" $ZIP/META-INF/com/google/android/updater-script
+fi
 cd $CURRENTDIR
 
 # Version
 MIUIVERSION=$(grep ro.miui.ui.version.code= $OUT/system/system/system/build.prop | sed "s/ro.miui.ui.version.code=//g"; )
 ROMANDROID=$(grep ro.build.version.release= $OUT/system/system/system/build.prop | sed "s/ro.build.version.release=//g"; )
 ROMBUILD=$(grep ro.build.id= $OUT/system/system/system/build.prop | sed "s/ro.build.id=//g"; )
+
 # dfe
 echo ". delete encryptation"
 sed -i "s/fileencryption=/encryptable=ice:/g" $OUT/vendor/vendor/etc/fstab.qcom
@@ -151,6 +158,7 @@ $TOOLS/img2sdat/img2sdat.py -v 4 -o $ZIP -p vendor vendorrw.img  >/dev/null
 $TOOLS/img2sdat/img2sdat.py -v 4 -o $ZIP -p product productrw.img >/dev/null
 $TOOLS/img2sdat/img2sdat.py -v 4 -o $ZIP -p odm odmrw.img  >/dev/null
 rm -rf $OUT/*
+
 # brotli
 cd $ZIP
 echo "convertiendo images a br"
