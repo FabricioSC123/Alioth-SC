@@ -95,14 +95,8 @@ mv tz.img $ZIP/firmware-update
 mv uefisecapp.img $ZIP/firmware-update
 mv vbmeta.img $ZIP/firmware-update
 mv vbmeta_system.img $ZIP/firmware-update
-mv vendor_boot.img $ZIP/firmware-update
 mv xbl.img $ZIP/firmware-update
 mv xbl_config.img $ZIP/firmware-update
-if [[ -e cust.img ]]; then
-mv cust.img $ZIP/firmware-update
-sed -i "s/#f2//g" $ZIP/META-INF/com/google/android/updater-script
-fi
-cd $CURRENTDIR
 
 # Version
 MIUIVERSION=$(grep ro.miui.ui.version.code= $OUT/system/system/system/build.prop | sed "s/ro.miui.ui.version.code=//g"; )
@@ -168,12 +162,11 @@ brotli -j -v -q 6 vendor.new.dat
 brotli -j -v -q 6 product.new.dat
 brotli -j -v -q 6 odm.new.dat
 echo "Empaquetando"
-DATE=$(date +%Y/%m/%d-%H:%M)
-zip -ry MIUI$MIUIVERSION-Alioth-$ROMBUILD-A$ROMANDROID-$DATE-SC.zip *  >/dev/null
-mv *.zip $CURRENTDIR
+zip -ry MIUI$MIUIVERSION-Alioth-$ROMBUILD-A$ROMANDROID-$1-SC.zip * 
+mv MIUI$MIUIVERSION-Alioth-$ROMBUILD-A$ROMANDROID-$1-SC.zip $CURRENTDIR
 echo "listo"
 echo "Subiendo a Sourceforge....."
 cd $CURRENTDIR
 mv $TOOLS/uploadsf $CURRENTDIR
-sudo bash $CURRENTDIR/uploadsf *-SC.zip
+sudo bash $CURRENTDIR/uploadsf MIUI$MIUIVERSION-Alioth-$ROMBUILD-A$ROMANDROID-$1-SC.zip
  
